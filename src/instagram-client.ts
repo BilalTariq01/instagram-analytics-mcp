@@ -17,7 +17,7 @@ import {
   Period,
 } from './types.js';
 
-const GRAPH_API_BASE_URL = 'https://graph.facebook.com/v18.0';
+const GRAPH_API_BASE_URL = 'https://graph.facebook.com/v23.0';
 
 export class InstagramClient {
   private axios: AxiosInstance;

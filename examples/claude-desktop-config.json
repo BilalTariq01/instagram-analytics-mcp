@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "instagram-analytics": {
+      "command": "node",
+      "args": [
+        "/Users/YOUR_USERNAME/path/to/mcp-instagram-analytics/dist/index.js"
+      ],
+      "env": {
+        "INSTAGRAM_ACCESS_TOKEN": "your_access_token_here"
+      }
+    }
+  }
+}

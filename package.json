@@ -1,0 +1,34 @@
+{
+  "name": "mcp-instagram-analytics",
+  "version": "1.0.0",
+  "description": "MCP server for Instagram analytics using Instagram Graph API",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "mcp-instagram-analytics": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "instagram",
+    "analytics",
+    "insights",
+    "graph-api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

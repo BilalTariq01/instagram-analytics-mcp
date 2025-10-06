@@ -15,9 +15,13 @@ import {
   AccountMetric,
   MediaMetric,
   Period,
+  MetricType,
+  BreakdownType,
+  Timeframe,
+  DemographicBreakdown,
 } from './types.js';
 
-const GRAPH_API_BASE_URL = 'https://graph.facebook.com/v23.0';
+const GRAPH_API_BASE_URL = 'https://graph.facebook.com/v20.0';
 
 export class InstagramClient {
   private axios: AxiosInstance;
@@ -158,36 +162,46 @@ export class InstagramClient {
   }
 
   /**
-   * Get account insights
+   * Get account insights with full API v23.0 support
    */
   async getAccountInsights(
     metrics: AccountMetric[],
     period: Period,
-    since?: number,
-    until?: number,
-    accountId?: string
+    options?: {
+      since?: number;
+      until?: number;
+      accountId?: string;
+      metricType?: MetricType;
+      breakdown?: BreakdownType | DemographicBreakdown;
+      timeframe?: Timeframe;
+    }
   ): Promise<AccountInsight[]> {
     try {
-      const targetAccountId = accountId || await this.getAccountId();
-
-      // Metrics that require metric_type=total_value
-      const totalValueMetrics = ['profile_views', 'website_clicks'];
-      
-      // Check if any of the requested metrics need metric_type
-      const needsMetricType = metrics.some(m => totalValueMetrics.includes(m));
+      const targetAccountId = options?.accountId || await this.getAccountId();
 
       const params: any = {
         metric: metrics.join(','),
         period,
       };
 
-      // Add metric_type if needed
-      if (needsMetricType) {
-        params.metric_type = 'total_value';
+      // Add metric_type if specified
+      if (options?.metricType) {
+        params.metric_type = options.metricType;
       }
 
-      if (since) params.since = since;
-      if (until) params.until = until;
+      // Add breakdown if specified
+      if (options?.breakdown) {
+        params.breakdown = options.breakdown;
+      }
+
+      // Add timeframe for demographic metrics
+      if (options?.timeframe) {
+        params.timeframe = options.timeframe;
+      }
+
+      // Add time range
+      if (options?.since) params.since = options.since;
+      if (options?.until) params.until = options.until;
 
       const response = await this.axios.get<InsightsResponse>(`/${targetAccountId}/insights`, { params });
 

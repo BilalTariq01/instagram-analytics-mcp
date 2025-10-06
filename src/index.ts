@@ -53,15 +53,15 @@ const TOOLS: Tool[] = [
       properties: {
         account_id: {
           type: 'string',
-          description: 'Instagram account ID (optional - if not provided, uses default or prompts for selection)',
+          description: 'Instagram account ID (required - use list_available_accounts to get account IDs)',
         },
       },
-      required: [],
+      required: ['account_id'],
     },
   },
   {
     name: 'get_account_insights',
-    description: 'Get account-level insights and analytics for specified metrics and time period. Available metrics: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies.',
+    description: 'Get account-level insights and analytics. Supports interaction metrics (accounts_engaged, comments, likes, reach, replies, saved, shares, total_interactions, views, profile_links_taps) and demographic metrics (engaged_audience_demographics, follower_demographics, follows_and_unfollows).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -70,41 +70,57 @@ const TOOLS: Tool[] = [
           items: {
             type: 'string',
             enum: [
-              'reach',
-              'follower_count',
-              'website_clicks',
-              'profile_views',
-              'online_followers',
               'accounts_engaged',
-              'total_interactions',
-              'likes',
               'comments',
-              'shares',
-              'saves',
+              'engaged_audience_demographics',
+              'follows_and_unfollows',
+              'follower_demographics',
+              'likes',
+              'profile_links_taps',
+              'reach',
               'replies',
+              'saved',
+              'shares',
+              'total_interactions',
+              'views',
             ],
           },
           description: 'Array of metrics to retrieve',
         },
         period: {
           type: 'string',
-          enum: ['day', 'week', 'days_28'],
-          description: 'Time period for the insights (default: day)',
+          enum: ['day', 'week', 'days_28', 'lifetime'],
+          description: 'Time period for the insights. Use lifetime for demographic metrics.',
+        },
+        metric_type: {
+          type: 'string',
+          enum: ['time_series', 'total_value'],
+          description: 'How to aggregate results: time_series (by time period) or total_value (simple total with optional breakdowns)',
+        },
+        breakdown: {
+          type: 'string',
+          enum: ['contact_button_type', 'follow_type', 'media_product_type', 'age', 'city', 'country', 'gender'],
+          description: 'Break down results by specific dimensions. Only works with metric_type=total_value.',
+        },
+        timeframe: {
+          type: 'string',
+          enum: ['last_14_days', 'last_30_days', 'last_90_days', 'prev_month', 'this_month', 'this_week'],
+          description: 'Required for demographic metrics. Specifies how far back to look for data.',
         },
         since: {
           type: 'number',
-          description: 'Unix timestamp for the start of the date range (optional)',
+          description: 'Unix timestamp for the start of the date range (optional, not used with demographic metrics)',
         },
         until: {
           type: 'number',
-          description: 'Unix timestamp for the end of the date range (optional)',
+          description: 'Unix timestamp for the end of the date range (optional, not used with demographic metrics)',
         },
         account_id: {
           type: 'string',
-          description: 'Instagram account ID (optional - if not provided, uses default or prompts for selection)',
+          description: 'Instagram account ID (required - use list_available_accounts to get account IDs)',
         },
       },
-      required: ['metrics', 'period'],
+      required: ['metrics', 'period', 'account_id'],
     },
   },
   {
@@ -119,10 +135,10 @@ const TOOLS: Tool[] = [
         },
         account_id: {
           type: 'string',
-          description: 'Instagram account ID (optional - if not provided, uses default or prompts for selection)',
+          description: 'Instagram account ID (required - use list_available_accounts to get account IDs)',
         },
       },
-      required: [],
+      required: ['account_id'],
     },
   },
   {
@@ -235,15 +251,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'get_account_insights': {
-        const { metrics, period, since, until, account_id } = args as {
+        const { metrics, period, since, until, account_id, metric_type, breakdown, timeframe } = args as {
           metrics: AccountMetric[];
           period: Period;
           since?: number;
           until?: number;
           account_id?: string;
+          metric_type?: string;
+          breakdown?: string;
+          timeframe?: string;
         };
 
-        const insights = await instagramClient.getAccountInsights(metrics, period, since, until, account_id);
+        const insights = await instagramClient.getAccountInsights(metrics, period, {
+          since,
+          until,
+          accountId: account_id,
+          metricType: metric_type as any,
+          breakdown: breakdown as any,
+          timeframe: timeframe as any,
+        });
         return {
           content: [
             {

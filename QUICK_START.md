@@ -17,17 +17,17 @@ You have 3 Instagram accounts available:
 
 ## How to Use
 
-### Step 1: List All Accounts (Optional)
+### Step 1: List All Accounts (Required First Step)
 
 ```
 Use list_available_accounts
 ```
 
-This shows all your Instagram accounts with their IDs.
+This shows all your Instagram accounts with their IDs. **You must do this first to get your account IDs.**
 
 ### Step 2: Analyze Any Account
 
-**Important**: Since you have multiple accounts, you must specify which one to analyze using the `account_id` parameter.
+**Important**: All tools now require the `account_id` parameter. You must specify which account to analyze.
 
 ## Examples
 

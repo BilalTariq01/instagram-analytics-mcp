@@ -73,20 +73,47 @@ export interface MediaResponse {
 }
 
 // Metric types for account insights
-// Based on Instagram Graph API v18.0+ requirements
+// Based on Instagram Graph API v23.0 official documentation
 export type AccountMetric =
-  | 'reach'
-  | 'follower_count'
-  | 'website_clicks'
-  | 'profile_views'
-  | 'online_followers'
+  // Interaction Metrics
   | 'accounts_engaged'
-  | 'total_interactions'
-  | 'likes'
   | 'comments'
+  | 'engaged_audience_demographics'
+  | 'follows_and_unfollows'
+  | 'follower_demographics'
+  | 'likes'
+  | 'profile_links_taps'
+  | 'reach'
+  | 'replies'
+  | 'saved'
   | 'shares'
-  | 'saves'
-  | 'replies';
+  | 'total_interactions'
+  | 'views';
+
+// Breakdown types for account insights
+export type BreakdownType =
+  | 'contact_button_type'
+  | 'follow_type'
+  | 'media_product_type';
+
+// Metric type for aggregation
+export type MetricType = 'time_series' | 'total_value';
+
+// Timeframe for demographic metrics
+export type Timeframe =
+  | 'last_14_days'
+  | 'last_30_days'
+  | 'last_90_days'
+  | 'prev_month'
+  | 'this_month'
+  | 'this_week';
+
+// Demographic breakdown types
+export type DemographicBreakdown =
+  | 'age'
+  | 'city'
+  | 'country'
+  | 'gender';
 
 // Metric types for media insights
 // Based on Instagram Graph API - effective April 21, 2025

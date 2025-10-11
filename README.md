@@ -1,11 +1,27 @@
-# Social Analytics MCP Server (Instagram & Facebook)
+# Social Analytics MCP Server
 
-A Model Context Protocol (MCP) server that provides access to social analytics using Meta's Graph APIs. It currently supports Instagram Business/Creator accounts and Facebook Pages, exposing insights, media data, and validation tools through a unified MCP interface.
+A unified Model Context Protocol (MCP) server providing comprehensive analytics for Instagram and Facebook through the Graph API. Built for extensibility to easily add more social platforms in the future.
+
+## Key Features
+
+- **Unified Interface**: Single MCP server supporting multiple social platforms
+- **Minimal Configuration**: Only access tokens required - no complex setup
+- **Smart Discovery**: Built-in tools to discover accounts and pages
+- **Rich Prompts**: Pre-built analysis prompts for common analytics tasks
+- **Type-Safe**: Full TypeScript implementation with proper error handling
+- **Extensible**: Clean architecture ready for additional platforms
 
 ## Features
 
-- 📊 **Instagram Account Insights**: Metrics like impressions, reach, profile views, follower count, and more
-- 📸 **Instagram Media Insights**: Analyze individual posts with engagement, impressions, reach, and saves
+- **Instagram Account Insights**: Metrics like impressions, reach, profile views, follower count, and more
+- **Instagram Media Insights**: Analyze individual posts with engagement, impressions, reach, and saves
+- **Instagram Media Management**: List and retrieve details about your Instagram posts
+- **Instagram Profile Information**: Access account profile data including followers, bio, and website
+- **Facebook Page Insights**: Pull page- and post-level metrics such as impressions, engaged users, and page views
+- **Facebook Post Listings**: Fetch posts with inline metrics for quick analysis
+- **Token Validation**: Check Page access tokens against the `/me` endpoint to confirm scopes and validity
+- **Secure**: Uses environment variables for access token management
+- **Easy to Use**: Simple setup and integration with MCP-compatible clients
 - 📋 **Instagram Media Management**: List and retrieve details about your Instagram posts
 - 👤 **Instagram Profile Information**: Access account profile data including followers, bio, and website
 - 📈 **Facebook Page Insights**: Pull page- and post-level metrics such as impressions, engaged users, and page views

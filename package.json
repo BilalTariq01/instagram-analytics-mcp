@@ -1,11 +1,11 @@
 {
-  "name": "mcp-instagram-analytics",
-  "version": "1.0.0",
-  "description": "MCP server for Instagram analytics using Instagram Graph API",
+  "name": "social-analytics-mcp",
+  "version": "2.0.0",
+  "description": "Unified MCP server for social media analytics (Instagram & Facebook) with extensible architecture",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "mcp-instagram-analytics": "./dist/index.js"
+    "social-analytics-mcp": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -16,9 +16,12 @@
   "keywords": [
     "mcp",
     "instagram",
+    "facebook",
     "analytics",
     "insights",
-    "graph-api"
+    "social-media",
+    "graph-api",
+    "model-context-protocol"
   ],
   "author": "",
   "license": "MIT",

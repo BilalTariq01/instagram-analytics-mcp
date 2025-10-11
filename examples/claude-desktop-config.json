@@ -1,12 +1,11 @@
 {
   "mcpServers": {
-    "instagram-analytics": {
+    "social-analytics": {
       "command": "node",
-      "args": [
-        "/Users/YOUR_USERNAME/path/to/mcp-instagram-analytics/dist/index.js"
-      ],
+      "args": ["/absolute/path/to/social-analytics-mcp/src/index.js"],
       "env": {
-        "INSTAGRAM_ACCESS_TOKEN": "your_access_token_here"
+        "INSTAGRAM_ACCESS_TOKEN": "your_instagram_access_token_here",
+        "FACEBOOK_ACCESS_TOKEN": "your_facebook_access_token_here"
       }
     }
   }

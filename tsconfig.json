@@ -14,6 +14,6 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src/**/*", "platforms/**/*"],
+  "include": ["index.ts", "src/**/*", "platforms/**/*"],
   "exclude": ["node_modules", "dist"]
 }

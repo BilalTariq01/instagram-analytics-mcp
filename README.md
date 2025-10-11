@@ -1,19 +1,24 @@
-# Instagram Analytics MCP Server
+# Social Analytics MCP Server (Instagram & Facebook)
 
-A Model Context Protocol (MCP) server that provides access to Instagram analytics and insights using the Instagram Graph API. This server allows you to retrieve account-level insights, media insights, and profile information programmatically.
+A Model Context Protocol (MCP) server that provides access to social analytics using Meta's Graph APIs. It currently supports Instagram Business/Creator accounts and Facebook Pages, exposing insights, media data, and validation tools through a unified MCP interface.
 
 ## Features
 
-- 📊 **Account Insights**: Get metrics like impressions, reach, profile views, follower count, and more
-- 📸 **Media Insights**: Analyze individual posts with engagement, impressions, reach, and saves
-- 📋 **Media Management**: List and retrieve details about your Instagram posts
-- 👤 **Profile Information**: Access account profile data including followers, bio, and website
+- 📊 **Instagram Account Insights**: Metrics like impressions, reach, profile views, follower count, and more
+- 📸 **Instagram Media Insights**: Analyze individual posts with engagement, impressions, reach, and saves
+- 📋 **Instagram Media Management**: List and retrieve details about your Instagram posts
+- 👤 **Instagram Profile Information**: Access account profile data including followers, bio, and website
+- 📈 **Facebook Page Insights**: Pull page- and post-level metrics such as impressions, engaged users, and page views
+- 📰 **Facebook Post Listings**: Fetch posts with inline metrics for quick analysis
+- ✅ **Token Validation**: Check Page access tokens against the `/me` endpoint to confirm scopes and validity
 - 🔒 **Secure**: Uses environment variables for access token management
 - 🚀 **Easy to Use**: Simple setup and integration with MCP-compatible clients
 
 ## Prerequisites
 
 Before using this MCP server, you need:
+
+### Instagram requirements
 
 1. **Instagram Business Account** or **Instagram Creator Account**
 2. **Facebook Page** connected to your Instagram account
@@ -23,6 +28,15 @@ Before using this MCP server, you need:
    - `instagram_manage_insights`
    - `pages_read_engagement`
    - `pages_show_list`
+
+### Facebook requirements
+
+1. **Facebook Page** with at least 30 likes (Insights require a minimum audience)
+2. **Facebook Developer App** with permissions:
+   - `read_insights`
+   - `pages_read_engagement`
+3. **Page Access Token** (must be a Page token, not a user token)
+4. (Optional) **App Access Token** if you plan to run Graph `debug_token` manually outside this server
 
 ## Getting Your Access Token
 

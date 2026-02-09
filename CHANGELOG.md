@@ -2,118 +2,77 @@
 
 All notable changes to the Social Analytics MCP Server will be documented in this file.
 
-## [2.0.0] - 2025-01-11
+## [3.0.0] - 2026-02-09
 
-### 🎉 Major Refactor: Unified Server Architecture
+### Breaking Changes
 
-#### Breaking Changes
+- **Restructured project**: All source code now lives under `src/` (including platform clients)
+- **Removed root `index.ts`**: The entry point is now `src/index.ts` → `dist/index.js`
+- **Removed standalone servers**: `platforms/instagram/server.ts` and `platforms/facebook/server.ts` are deleted
+- **Bumped to v3.0.0**: Package version, server version, and types are now in sync
 
-- **Unified Server**: Merged Instagram and Facebook into single MCP server
-  - No longer need `SOCIAL_PLATFORM` environment variable
-  - Both platforms work simultaneously
-  - Tool names now prefixed: `instagram_*` and `facebook_*`
+### Added
 
-- **Configuration Changes**:
-  - `FACEBOOK_PAGE_ACCESS_TOKEN` → `FACEBOOK_ACCESS_TOKEN`
-  - Account/Page IDs now optional (use discovery tools instead)
+- **New Instagram tools**:
+  - `instagram_get_stories` — Retrieve recent Instagram Stories
+  - `instagram_get_hashtag_search` — Search for hashtag IDs
+  - `instagram_get_hashtag_media` — Get top/recent media for a hashtag
+  - `instagram_get_content_publishing_limit` — Check publishing rate limits
+  - `instagram_get_mentioned_media` — Get media where account is tagged
 
-#### Added
+- **New Facebook tools**:
+  - `facebook_get_page_details` — Get page profile info (name, category, followers, about)
+  - `facebook_get_page_feed` — Get page feed with reactions/comments/shares
+  - `facebook_list_known_metrics` — Expose supported metrics reference
+  - `facebook_validate_token` — Validate access tokens
 
-- **Unified MCP Server** (`src/index.ts`)
-  - Single server supporting both Instagram and Facebook
-  - Automatic platform routing based on tool prefix
-  - Cleaner architecture for future platform additions
+- **Shared retry utility** (`src/utils/retry.ts`): Exponential backoff with jitter, respects `Retry-After` header. Used by both Instagram and Facebook clients.
 
-- **Rich Prompts System** (`src/prompts.ts`)
-  - `analyze_instagram_performance` - Comprehensive Instagram analysis
-  - `analyze_facebook_performance` - Comprehensive Facebook analysis
-  - `compare_post_performance` - Cross-post comparison
-  - `get_audience_demographics` - Demographic insights
-  - `setup_platform` - Interactive setup guide
+- **Unified error handling** (`src/utils/errors.ts`): `SocialAnalyticsError` base class, `InstagramApiError` (new), `FacebookApiError` (moved)
 
-- **Modular Tool Definitions** (`src/tools.ts`)
-  - All Instagram tools with `instagram_` prefix
-  - All Facebook tools with `facebook_` prefix
-  - Clean separation of platform-specific schemas
+- **Structured logger** (`src/utils/logger.ts`): Writes to stderr (MCP-safe), debug mode via `DEBUG=social-analytics-mcp`
 
-- **Centralized Handlers** (`src/handlers.ts`)
-  - `handleInstagramTool()` - Routes Instagram tool calls
-  - `handleFacebookTool()` - Routes Facebook tool calls
-  - Consistent error handling across platforms
+- **`createServer()` export**: For programmatic MCP server creation
 
-- **Discovery Tools**
-  - `instagram_list_accounts` - Find Instagram Business accounts
-  - `facebook_list_pages` - Find Facebook Pages
-  - No need to pre-configure IDs!
+- **`CONTRIBUTING.md`**: Development setup and contribution guidelines
 
-- **Documentation**
-  - `QUICKSTART.md` - 3-step setup guide
-  - `PROJECT_STRUCTURE.md` - Architecture documentation
-  - Updated `README.md` with unified approach
-  - Enhanced `.env.example` with clear sections
+### Fixed
 
-#### Changed
+- **API version mismatch**: Instagram client was hardcoded to `v20.0` but documented as `v23.0`. Now defaults to `v23.0` and is configurable via `INSTAGRAM_API_VERSION` env var.
+- **Server version mismatch**: Server reported `1.0.0` but `package.json` said `2.0.0`. Now kept in sync at `3.0.0`.
+- **`account_id` required vs optional**: Tool schemas marked `account_id` as required despite descriptions saying "optional if set in environment". Removed from `required` arrays — the client handles auto-detection.
+- **`page_id` required vs optional**: Same fix for Facebook `page_id`.
+- **Instagram client missing retry logic**: Now uses shared retry utility matching Facebook client behavior.
+- **Media insights documentation**: Tool description now explains which metrics work for which media types (images vs videos vs reels vs stories).
 
-- **Minimal Configuration Philosophy**
-  - Only access tokens required in MCP settings
-  - Account/Page IDs discovered via tools
-  - Optional: Set default IDs if desired
+### Changed
 
-- **Tool Naming Convention**
-  - Instagram: `instagram_list_accounts`, `instagram_get_profile`, etc.
-  - Facebook: `facebook_list_pages`, `facebook_get_page_insights`, etc.
+- **File structure**: Platform clients moved from `platforms/` to `src/platforms/`
+- **`tsconfig.json`**: `rootDir` changed to `./src`, removed old `platforms/**/*` include
+- **`.gitignore`**: Added patterns for compiled JS in source directories
+- **`package.json`**: Added `files`, `types`, `exports`, `engines`, `clean`, and `prepublishOnly` fields for npm publishing readiness
 
-- **Package Metadata**
-  - Name: `mcp-instagram-analytics` → `social-analytics-mcp`
-  - Version: `1.0.0` → `2.0.0`
-  - Main: `dist/index.js` → `dist/src/index.js`
+### Removed
 
-#### Improved
+- `src/instagram-client.ts` (duplicate of platform client)
+- `src/types.ts` (duplicate of platform types)
+- `platforms/instagram/server.ts` (deprecated standalone server)
+- `platforms/facebook/server.ts` (deprecated standalone server)
+- All compiled `.js`/`.d.ts`/`.map` files from `platforms/`
+- `PROJECT_STRUCTURE.md`, `INDEX.md`, `QUICKSTART.md` (consolidated into README)
+- `docs/` directory (consolidated into README and CONTRIBUTING)
+- `examples/` directory (examples in README)
 
-- **Error Messages**
-  - Clear "client not initialized" errors
-  - Helpful guidance when tokens missing
-  - Better API error formatting
+### Migration from v2.x
 
-- **Type Safety**
-  - Proper TypeScript types throughout
-  - Type-safe tool handlers
-  - Compile-time error checking
+Update your MCP client configuration to point to the new output path:
 
-- **Code Organization**
-  - Clear separation: server, tools, prompts, handlers
-  - Platform clients remain independent
-  - Easy to add new platforms
-
-#### Migration Guide
-
-**Old Configuration (v1.x)**:
-```json
-{
-  "mcpServers": {
-    "instagram": {
-      "env": {
-        "SOCIAL_PLATFORM": "instagram",
-        "INSTAGRAM_ACCESS_TOKEN": "...",
-        "INSTAGRAM_ACCOUNT_ID": "..."
-      }
-    },
-    "facebook": {
-      "env": {
-        "SOCIAL_PLATFORM": "facebook",
-        "FACEBOOK_PAGE_ACCESS_TOKEN": "...",
-        "FACEBOOK_PAGE_ID": "..."
-      }
-    }
-  }
-}
-```
-
-**New Configuration (v2.0)**:
 ```json
 {
   "mcpServers": {
     "social-analytics": {
+      "command": "node",
+      "args": ["/path/to/social-analytics-mcp/dist/index.js"],
       "env": {
         "INSTAGRAM_ACCESS_TOKEN": "...",
         "FACEBOOK_ACCESS_TOKEN": "..."
@@ -123,17 +82,29 @@ All notable changes to the Social Analytics MCP Server will be documented in thi
 }
 ```
 
-**Tool Name Changes**:
-- `list_available_accounts` → `instagram_list_accounts`
-- `get_user_profile` → `instagram_get_profile`
-- `get_account_insights` → `instagram_get_account_insights`
-- `list_media` → `instagram_list_media`
-- `get_media_details` → `instagram_get_media_details`
-- `get_media_insights` → `instagram_get_media_insights`
-- `list_pages` → `facebook_list_pages`
-- `get_page_insights` → `facebook_get_page_insights`
-- `get_post_insights` → `facebook_get_post_insights`
-- `list_posts_with_insights` → `facebook_list_posts_with_insights`
+Tool names are unchanged. New tools are additions only — no existing tools were renamed or removed.
+
+---
+
+## [2.0.0] - 2025-01-11
+
+### Major Refactor: Unified Server Architecture
+
+#### Breaking Changes
+
+- **Unified Server**: Merged Instagram and Facebook into single MCP server
+- **Configuration Changes**: `FACEBOOK_PAGE_ACCESS_TOKEN` → `FACEBOOK_ACCESS_TOKEN`; Account/Page IDs now optional
+
+#### Added
+
+- Unified MCP server, rich prompts system, modular tool definitions, centralized handlers, discovery tools
+
+#### Changed
+
+- Tool naming convention: all tools prefixed with `instagram_` or `facebook_`
+- Package name: `mcp-instagram-analytics` → `social-analytics-mcp`
+
+---
 
 ## [1.0.0] - 2024-12-XX
 
@@ -143,26 +114,3 @@ All notable changes to the Social Analytics MCP Server will be documented in thi
 - Facebook Page analytics
 - Separate servers per platform
 - Basic MCP protocol implementation
-- Environment-based configuration
-
----
-
-## Future Roadmap
-
-### v2.1.0 (Planned)
-- Add Twitter/X analytics support
-- Implement request caching
-- Enhanced error recovery
-- Token refresh mechanism
-
-### v2.2.0 (Planned)
-- LinkedIn analytics support
-- Webhook support for real-time updates
-- Scheduled report generation
-- Data export features
-
-### v3.0.0 (Planned)
-- Multi-account management
-- Custom dashboard generation
-- Advanced analytics and ML insights
-- Performance optimizations

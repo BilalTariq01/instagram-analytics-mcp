@@ -1,382 +1,190 @@
 # Social Analytics MCP Server
 
-A unified Model Context Protocol (MCP) server providing comprehensive analytics for Instagram and Facebook through the Graph API. Built for extensibility to easily add more social platforms in the future.
-
-## Key Features
-
-- **Unified Interface**: Single MCP server supporting multiple social platforms
-- **Minimal Configuration**: Only access tokens required - no complex setup
-- **Smart Discovery**: Built-in tools to discover accounts and pages
-- **Rich Prompts**: Pre-built analysis prompts for common analytics tasks
-- **Type-Safe**: Full TypeScript implementation with proper error handling
-- **Extensible**: Clean architecture ready for additional platforms
+A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for Instagram and Facebook analytics via the Meta Graph API.
 
 ## Features
 
-- **Instagram Account Insights**: Metrics like impressions, reach, profile views, follower count, and more
-- **Instagram Media Insights**: Analyze individual posts with engagement, impressions, reach, and saves
-- **Instagram Media Management**: List and retrieve details about your Instagram posts
-- **Instagram Profile Information**: Access account profile data including followers, bio, and website
-- **Facebook Page Insights**: Pull page- and post-level metrics such as impressions, engaged users, and page views
-- **Facebook Post Listings**: Fetch posts with inline metrics for quick analysis
-- **Token Validation**: Check Page access tokens against the `/me` endpoint to confirm scopes and validity
-- **Secure**: Uses environment variables for access token management
-- **Easy to Use**: Simple setup and integration with MCP-compatible clients
-- 📋 **Instagram Media Management**: List and retrieve details about your Instagram posts
-- 👤 **Instagram Profile Information**: Access account profile data including followers, bio, and website
-- 📈 **Facebook Page Insights**: Pull page- and post-level metrics such as impressions, engaged users, and page views
-- 📰 **Facebook Post Listings**: Fetch posts with inline metrics for quick analysis
-- ✅ **Token Validation**: Check Page access tokens against the `/me` endpoint to confirm scopes and validity
-- 🔒 **Secure**: Uses environment variables for access token management
-- 🚀 **Easy to Use**: Simple setup and integration with MCP-compatible clients
+### Instagram
 
-## Prerequisites
+- Account discovery and profile information
+- Account-level insights with demographic breakdowns
+- Media listing with engagement data
+- Per-post insights (images, videos, reels, carousels)
+- Stories retrieval
+- Hashtag search and media discovery
+- Content publishing rate limits
+- Mentioned/tagged media
 
-Before using this MCP server, you need:
+### Facebook
 
-### Instagram requirements
+- Page discovery and detailed page info
+- Page-level insights (impressions, engagement, fans, views)
+- Post-level insights
+- Posts with inline metrics
+- Page feed with reactions/comments/shares
+- Known metrics reference
+- Access token validation
 
-1. **Instagram Business Account** or **Instagram Creator Account**
-2. **Facebook Page** connected to your Instagram account
-3. **Facebook Developer Account** with an app created
-4. **Instagram Graph API Access Token** with the following permissions:
-   - `instagram_basic`
-   - `instagram_manage_insights`
-   - `pages_read_engagement`
-   - `pages_show_list`
+### Shared
 
-### Facebook requirements
+- Pre-built analysis prompts for common workflows
+- Retry with exponential backoff on 429/5xx errors
+- Structured error handling across both platforms
+- Debug logging via `DEBUG=social-analytics-mcp`
 
-1. **Facebook Page** with at least 30 likes (Insights require a minimum audience)
-2. **Facebook Developer App** with permissions:
-   - `read_insights`
-   - `pages_read_engagement`
-3. **Page Access Token** (must be a Page token, not a user token)
-4. (Optional) **App Access Token** if you plan to run Graph `debug_token` manually outside this server
+## Quick Start
 
-## Getting Your Access Token
+1. **Install and build**
 
-### Step 1: Create a Facebook App
+   ```bash
+   git clone <repository-url>
+   cd social-analytics-mcp
+   npm install
+   npm run build
+   ```
 
-1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Click "My Apps" → "Create App"
-3. Choose "Business" as the app type
-4. Fill in the required details
+2. **Get an access token** from the [Graph API Explorer](https://developers.facebook.com/tools/explorer/) with permissions:
+   - Instagram: `instagram_basic`, `instagram_manage_insights`, `pages_read_engagement`
+   - Facebook: `read_insights`, `pages_read_engagement`
 
-### Step 2: Add Instagram Graph API
+3. **Add to your MCP client** (see configuration below)
 
-1. In your app dashboard, click "Add Product"
-2. Find "Instagram" and click "Set Up"
-3. Follow the setup instructions
+## Configuration
 
-### Step 3: Generate Access Token
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `INSTAGRAM_ACCESS_TOKEN` | For Instagram | — | Facebook User Access Token with Instagram permissions |
+| `INSTAGRAM_ACCOUNT_ID` | No | Auto-detected | Instagram Business Account ID |
+| `INSTAGRAM_API_VERSION` | No | `v23.0` | Instagram Graph API version |
+| `FACEBOOK_ACCESS_TOKEN` | For Facebook | — | Facebook User/Page Access Token |
+| `FACEBOOK_PAGE_ID` | No | Use discovery tool | Facebook Page ID |
+| `FACEBOOK_API_VERSION` | No | `v22.0` | Facebook Graph API version |
+| `DEBUG` | No | — | Set to `social-analytics-mcp` for debug logs |
 
-1. Go to **Graph API Explorer** in your app
-2. Select your app from the dropdown
-3. Click "Generate Access Token"
-4. Select the required permissions:
-   - `instagram_basic`
-   - `instagram_manage_insights`
-   - `pages_read_engagement`
-   - `pages_show_list`
-5. Copy the generated access token
+You only need to configure access tokens for the platforms you want to use. Account and page IDs can be discovered using the built-in tools.
 
-### Step 4: Get Long-Lived Token (Recommended)
+## MCP Client Setup
 
-Short-lived tokens expire in 1 hour. Convert to a long-lived token (60 days):
+### Claude Desktop
 
-```bash
-curl -X GET "https://graph.facebook.com/v18.0/oauth/access_token?grant_type=fb_exchange_token&client_id=YOUR_APP_ID&client_secret=YOUR_APP_SECRET&fb_exchange_token=YOUR_SHORT_LIVED_TOKEN"
-```
-
-For more details, see the [Instagram Platform Documentation](https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/getting-started).
-
-## Installation
-
-1. **Clone or download this repository**
-
-```bash
-git clone <repository-url>
-cd mcp-instagram-analytics
-```
-
-2. **Install dependencies**
-
-```bash
-npm install
-```
-
-3. **Configure environment variables**
-
-Create a `.env` file in the root directory:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your credentials:
-
-```env
-INSTAGRAM_ACCESS_TOKEN=your_access_token_here
-INSTAGRAM_ACCOUNT_ID=your_account_id_here  # Optional - will be auto-detected
-```
-
-4. **Build the project**
-
-```bash
-npm run build
-```
-
-## Usage
-
-### Running the Server
-
-```bash
-npm start
-```
-
-Or for development with auto-rebuild:
-
-```bash
-npm run dev
-```
-
-### Configuring with MCP Clients
-
-Add this server to your MCP client configuration. For example, in Claude Desktop's config file:
-
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
-    "instagram-analytics": {
+    "social-analytics": {
       "command": "node",
-      "args": ["/absolute/path/to/mcp-instagram-analytics/dist/index.js"],
+      "args": ["/absolute/path/to/social-analytics-mcp/dist/index.js"],
       "env": {
-        "INSTAGRAM_ACCESS_TOKEN": "your_access_token_here"
+        "INSTAGRAM_ACCESS_TOKEN": "your_token_here",
+        "FACEBOOK_ACCESS_TOKEN": "your_token_here"
       }
     }
   }
 }
 ```
 
+### Claude Code
+
+```bash
+claude mcp add social-analytics node /absolute/path/to/social-analytics-mcp/dist/index.js \
+  -e INSTAGRAM_ACCESS_TOKEN=your_token_here \
+  -e FACEBOOK_ACCESS_TOKEN=your_token_here
+```
+
 ## Available Tools
 
-### 1. `list_available_accounts`
+### Instagram Tools
 
-List all Instagram Business accounts connected to your Facebook pages. Use this when you have multiple accounts to see which ones are available.
+| Tool | Description | Required Params |
+|---|---|---|
+| `instagram_list_accounts` | List available Instagram Business accounts | — |
+| `instagram_get_profile` | Get account profile info | — |
+| `instagram_get_account_insights` | Get account-level analytics | `metrics`, `metric_type`, `period` |
+| `instagram_list_media` | List recent media posts | — |
+| `instagram_get_media_details` | Get details for a specific post | `media_id` |
+| `instagram_get_media_insights` | Get insights for a specific post | `media_id`, `metrics` |
+| `instagram_get_stories` | Get recent stories | — |
+| `instagram_get_hashtag_search` | Search for a hashtag ID | `hashtag` |
+| `instagram_get_hashtag_media` | Get media for a hashtag | `hashtag_id` |
+| `instagram_get_content_publishing_limit` | Check publishing rate limits | — |
+| `instagram_get_mentioned_media` | Get media where account is tagged | — |
 
-**Parameters**: None
+### Facebook Tools
 
-**Example Response**:
-```json
-[
-  {
-    "id": "123456789",
-    "username": "my_business_account",
-    "name": "My Business",
-    "pageId": "987654321",
-    "pageName": "My Facebook Page"
-  },
-  {
-    "id": "987654321",
-    "username": "my_other_account",
-    "name": "My Other Business",
-    "pageId": "123456789",
-    "pageName": "Another Page"
-  }
-]
+| Tool | Description | Required Params |
+|---|---|---|
+| `facebook_list_pages` | List accessible Facebook Pages | — |
+| `facebook_get_page_details` | Get page profile information | — |
+| `facebook_get_page_insights` | Get page-level insights | `metrics` |
+| `facebook_get_post_insights` | Get insights for a specific post | `post_id`, `metrics` |
+| `facebook_list_posts_with_insights` | List posts with inline metrics | `post_metrics` |
+| `facebook_get_page_feed` | Get page feed with engagement data | — |
+| `facebook_list_known_metrics` | List supported metrics reference | — |
+| `facebook_validate_token` | Validate an access token | `access_token` |
+
+### Common Parameters
+
+Most Instagram tools accept an optional `account_id` parameter. If not provided, the account is auto-detected from the `INSTAGRAM_ACCOUNT_ID` environment variable or discovered automatically if only one account exists.
+
+Most Facebook tools accept an optional `page_id` parameter with similar auto-detection behavior via `FACEBOOK_PAGE_ID`.
+
+## Available Prompts
+
+| Prompt | Description |
+|---|---|
+| `analyze_instagram_performance` | Comprehensive Instagram account analysis |
+| `analyze_facebook_performance` | Comprehensive Facebook Page analysis |
+| `compare_post_performance` | Compare recent posts on either platform |
+| `get_audience_demographics` | Audience demographic breakdown |
+| `setup_platform` | Interactive setup guide |
+
+## Programmatic Usage
+
+```typescript
+import { InstagramClient, FacebookClient, createServer } from 'social-analytics-mcp';
+
+// Use clients directly
+const instagram = new InstagramClient({
+  accessToken: 'your_token',
+  accountId: 'optional_account_id',
+});
+const profile = await instagram.getUserProfile();
+
+// Or create an MCP server programmatically
+const server = createServer();
 ```
-
-**Use Case**: If you have multiple Instagram accounts, run this tool first to see all available accounts and their IDs. Then set the `INSTAGRAM_ACCOUNT_ID` environment variable to the ID of the account you want to use.
-
-### 2. `get_user_profile`
-
-Get Instagram business account profile information.
-
-**Parameters**: None
-
-**Example Response**:
-```json
-{
-  "id": "123456789",
-  "username": "your_username",
-  "name": "Your Name",
-  "followers_count": 1500,
-  "follows_count": 300,
-  "media_count": 50,
-  "biography": "Your bio",
-  "website": "https://yourwebsite.com"
-}
-```
-
-### 3. `get_account_insights`
-
-Get account-level insights and analytics.
-
-**Parameters**:
-- `metrics` (required): Array of metrics to retrieve
-  - Available: `impressions`, `reach`, `profile_views`, `follower_count`, `email_contacts`, `phone_call_clicks`, `text_message_clicks`, `get_directions_clicks`, `website_clicks`
-- `period` (required): Time period (`day`, `week`, `days_28`)
-- `since` (optional): Unix timestamp for start date
-- `until` (optional): Unix timestamp for end date
-
-**Example**:
-```json
-{
-  "metrics": ["impressions", "reach", "profile_views"],
-  "period": "day"
-}
-```
-
-### 4. `list_media`
-
-Get a list of recent media posts.
-
-**Parameters**:
-- `limit` (optional): Number of items to retrieve (default: 25, max: 100)
-
-**Example Response**:
-```json
-[
-  {
-    "id": "media_id_123",
-    "caption": "Check out this post!",
-    "media_type": "IMAGE",
-    "media_url": "https://...",
-    "permalink": "https://instagram.com/p/...",
-    "timestamp": "2024-01-15T10:30:00+0000",
-    "like_count": 150,
-    "comments_count": 25
-  }
-]
-```
-
-### 5. `get_media_insights`
-
-Get insights for a specific media post.
-
-**Parameters**:
-- `media_id` (required): The ID of the media item
-- `metrics` (required): Array of metrics
-  - Available: `engagement`, `impressions`, `reach`, `saved`, `video_views`, `likes`, `comments`, `shares`
-
-**Example**:
-```json
-{
-  "media_id": "media_id_123",
-  "metrics": ["engagement", "impressions", "reach", "saved"]
-}
-```
-
-### 6. `get_media_details`
-
-Get detailed information about a specific media post.
-
-**Parameters**:
-- `media_id` (required): The ID of the media item
-
-## Example Use Cases
-
-### Analyze Recent Performance
-
-1. Use `list_media` to get your recent posts
-2. Use `get_media_insights` on each post to analyze performance
-3. Compare metrics across posts to identify what content performs best
-
-### Track Account Growth
-
-1. Use `get_account_insights` with `follower_count` metric over `days_28` period
-2. Monitor `profile_views` and `reach` to understand visibility
-3. Track `website_clicks` to measure traffic generation
-
-### Content Strategy
-
-1. Use `get_media_insights` to identify top-performing posts
-2. Analyze `engagement` and `saved` metrics
-3. Adjust content strategy based on insights
 
 ## Troubleshooting
 
 ### "Access token is invalid"
 
-- Ensure your access token has the required permissions
-- Check if the token has expired (short-lived tokens expire in 1 hour)
-- Generate a new long-lived token
+- Ensure your token has the required permissions
+- Short-lived tokens expire in 1 hour — generate a long-lived token
 
 ### "No Instagram Business account found"
 
-- Ensure your Instagram account is a Business or Creator account
-- Verify your Instagram account is connected to a Facebook Page
-- Check that your Facebook Page is accessible with the current token
+- Your Instagram account must be a Business or Creator account
+- It must be connected to a Facebook Page
 
 ### "Unsupported metric"
 
-- Some metrics are only available for certain account types
-- Video-specific metrics (like `video_views`) only work for video posts
-- Check the [Instagram Insights API documentation](https://developers.facebook.com/docs/instagram-platform/insights) for metric availability
+- Some metrics are media-type specific (e.g., `avg_time_watched` only works for videos/reels)
+- Use `facebook_list_known_metrics` to see supported Facebook metrics
 
-## API Rate Limits
+### Rate limits
 
-Instagram Graph API has rate limits:
-- **200 calls per hour** per user access token
-- **200 calls per hour** per app
-
-Plan your usage accordingly and implement caching if needed.
-
-## Development
-
-### Project Structure
-
-```
-mcp-instagram-analytics/
-├── src/
-│   ├── index.ts              # MCP server implementation
-│   ├── instagram-client.ts   # Instagram API client
-│   └── types.ts              # TypeScript type definitions
-├── dist/                     # Compiled JavaScript (generated)
-├── .env                      # Environment variables (create this)
-├── .env.example              # Environment variables template
-├── package.json              # Dependencies and scripts
-├── tsconfig.json             # TypeScript configuration
-└── README.md                 # This file
-```
-
-### Building
-
-```bash
-npm run build
-```
-
-### Watch Mode
-
-```bash
-npm run watch
-```
+- Instagram: 200 calls/hour per user token
+- The server automatically retries on 429/5xx with exponential backoff
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
-MIT License - feel free to use this in your own projects!
-
-## Resources
-
-- [Instagram Platform Documentation](https://developers.facebook.com/docs/instagram-platform)
-- [Instagram Insights API](https://developers.facebook.com/docs/instagram-platform/insights)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Facebook Graph API Explorer](https://developers.facebook.com/tools/explorer/)
-
-## Support
-
-For issues and questions:
-- Check the [Instagram Platform Documentation](https://developers.facebook.com/docs/instagram-platform)
-- Review the troubleshooting section above
-- Open an issue in this repository
+MIT
 
 ---
 

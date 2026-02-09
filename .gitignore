@@ -3,3 +3,9 @@ dist/
 .env
 *.log
 .DS_Store
+
+# Compiled output in source directories
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map
+src/**/*.d.ts.map

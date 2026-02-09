@@ -1,17 +1,35 @@
 {
   "name": "social-analytics-mcp",
-  "version": "2.0.0",
-  "description": "Unified MCP server for social media analytics (Instagram & Facebook) with extensible architecture",
+  "version": "3.0.0",
+  "description": "MCP server for Instagram and Facebook analytics via the Graph API",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "bin": {
     "social-analytics-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc",
+    "clean": "rm -rf dist",
     "watch": "tsc --watch",
     "start": "node dist/index.js",
-    "dev": "tsc && node dist/index.js"
+    "dev": "tsc && node dist/index.js",
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "keywords": [
     "mcp",
@@ -21,10 +39,20 @@
     "insights",
     "social-media",
     "graph-api",
-    "model-context-protocol"
+    "model-context-protocol",
+    "claude",
+    "ai"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "homepage": "",
+  "bugs": {
+    "url": ""
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",
     "axios": "^1.7.2",

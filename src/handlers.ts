@@ -2,8 +2,8 @@
  * Tool handlers for Social Analytics MCP Server
  */
 
-import { InstagramClient } from '../platforms/instagram/client.js';
-import { FacebookClient } from '../platforms/facebook/client.js';
+import { InstagramClient } from './platforms/instagram/client.js';
+import { FacebookClient } from './platforms/facebook/client.js';
 
 export async function handleInstagramTool(
   toolName: string,
@@ -25,21 +25,21 @@ export async function handleInstagramTool(
 
     case 'instagram_get_account_insights': {
       const accountId = args.account_id as string | undefined;
-      const metrics = args.metrics as any[];
+      const metrics = args.metrics as string[];
       const metricType = args.metric_type as 'time_series' | 'total_value' | undefined;
-      const period = args.period as any;
+      const period = args.period as string;
       const since = args.since as number | undefined;
       const until = args.until as number | undefined;
-      const timeframe = args.timeframe as any;
-      const breakdown = args.breakdown as any;
+      const timeframe = args.timeframe as string | undefined;
+      const breakdown = args.breakdown as string | undefined;
 
-      return await client.getAccountInsights(metrics, period, {
+      return await client.getAccountInsights(metrics as any[], period as any, {
         accountId,
         metricType,
         since,
         until,
-        timeframe,
-        breakdown,
+        timeframe: timeframe as any,
+        breakdown: breakdown as any,
       });
     }
 
@@ -56,9 +56,40 @@ export async function handleInstagramTool(
 
     case 'instagram_get_media_insights': {
       const mediaId = args.media_id as string;
-      const metrics = args.metrics as any[];
-      const period = args.period as any;
-      return await client.getMediaInsights(mediaId, metrics, period);
+      const metrics = args.metrics as string[];
+      const period = args.period as string | undefined;
+      return await client.getMediaInsights(mediaId, metrics as any[], period as any);
+    }
+
+    case 'instagram_get_stories': {
+      const accountId = args.account_id as string | undefined;
+      return await client.getStories(accountId);
+    }
+
+    case 'instagram_get_hashtag_search': {
+      const hashtag = args.hashtag as string;
+      const accountId = args.account_id as string | undefined;
+      const hashtagId = await client.searchHashtag(hashtag, accountId);
+      return { hashtag, hashtag_id: hashtagId };
+    }
+
+    case 'instagram_get_hashtag_media': {
+      const hashtagId = args.hashtag_id as string;
+      const type = (args.type as 'top_media' | 'recent_media') || 'top_media';
+      const accountId = args.account_id as string | undefined;
+      const limit = args.limit as number | undefined;
+      return await client.getHashtagMedia(hashtagId, type, accountId, limit);
+    }
+
+    case 'instagram_get_content_publishing_limit': {
+      const accountId = args.account_id as string | undefined;
+      return await client.getContentPublishingLimit(accountId);
+    }
+
+    case 'instagram_get_mentioned_media': {
+      const accountId = args.account_id as string | undefined;
+      const limit = args.limit as number | undefined;
+      return await client.getMentionedMedia(accountId, limit);
     }
 
     default:
@@ -78,6 +109,11 @@ export async function handleFacebookTool(
   switch (toolName) {
     case 'facebook_list_pages':
       return await client.listPages();
+
+    case 'facebook_get_page_details': {
+      const pageId = args.page_id as string | undefined;
+      return await client.getPageDetails(pageId);
+    }
 
     case 'facebook_get_page_insights': {
       const pageId = args.page_id as string | undefined;
@@ -119,6 +155,21 @@ export async function handleFacebookTool(
         postMetrics,
         limit,
       });
+    }
+
+    case 'facebook_get_page_feed': {
+      const pageId = args.page_id as string | undefined;
+      const limit = args.limit as number | undefined;
+      return await client.getPageFeed(pageId, limit);
+    }
+
+    case 'facebook_list_known_metrics':
+      return client.listKnownMetrics();
+
+    case 'facebook_validate_token': {
+      const accessToken = args.access_token as string;
+      const fields = args.fields as string[] | undefined;
+      return await client.validateAccessToken({ accessToken, fields });
     }
 
     default:

@@ -1,4 +1,13 @@
+/**
+ * Facebook Graph API Client
+ * Handles all API requests to Facebook Graph API
+ */
+
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { requestWithRetry } from '../../utils/retry.js';
+import { FacebookApiError } from '../../utils/errors.js';
+import { logger } from '../../utils/logger.js';
+import type { NormalizedError } from '../../utils/errors.js';
 import {
   FacebookConfig,
   PageInsightsParams,
@@ -10,11 +19,11 @@ import {
   ValidateTokenParams,
   ValidateTokenResult,
   InsightsResponse,
-  NormalizedError,
   GraphApiError,
-  FacebookApiError,
   KnownMetric,
   ListPagesResponse,
+  PageDetails,
+  PageFeedResponse,
 } from './types.js';
 
 const GRAPH_API_BASE_URL = 'https://graph.facebook.com';
@@ -46,6 +55,10 @@ export class FacebookClient {
     this.axiosInstance = axios.create({
       baseURL: GRAPH_API_BASE_URL,
     });
+
+    logger.debug('Facebook client initialized', {
+      apiVersion: config.defaultApiVersion || DEFAULT_API_VERSION,
+    });
   }
 
   async getPageInsights(params: PageInsightsParams): Promise<PageInsightsResult> {
@@ -66,26 +79,14 @@ export class FacebookClient {
       access_token: accessToken,
     };
 
-    if (params.period) {
-      query.period = params.period;
-    }
-    if (params.since) {
-      query.since = params.since;
-    }
-    if (params.until) {
-      query.until = params.until;
-    }
-    if (typeof params.limit === 'number') {
-      query.limit = String(params.limit);
-    }
-    if (params.after) {
-      query.after = params.after;
-    }
-    if (params.before) {
-      query.before = params.before;
-    }
+    if (params.period) query.period = params.period;
+    if (params.since) query.since = params.since;
+    if (params.until) query.until = params.until;
+    if (typeof params.limit === 'number') query.limit = String(params.limit);
+    if (params.after) query.after = params.after;
+    if (params.before) query.before = params.before;
 
-    const data = await this.requestWithRetry<InsightsResponse>({
+    const data = await this.request<InsightsResponse>({
       method: 'GET',
       url: this.buildPath(apiVersion, `${pageId}/insights`),
       params: query,
@@ -125,11 +126,9 @@ export class FacebookClient {
       access_token: accessToken,
     };
 
-    if (params.period) {
-      query.period = params.period;
-    }
+    if (params.period) query.period = params.period;
 
-    return this.requestWithRetry<InsightsResponse>({
+    return this.request<InsightsResponse>({
       method: 'GET',
       url: this.buildPath(apiVersion, `${params.postId}/insights`),
       params: query,
@@ -157,14 +156,10 @@ export class FacebookClient {
       limit: String(params.limit ?? 25),
     };
 
-    if (params.after) {
-      query.after = params.after;
-    }
-    if (params.before) {
-      query.before = params.before;
-    }
+    if (params.after) query.after = params.after;
+    if (params.before) query.before = params.before;
 
-    return this.requestWithRetry<PostsWithInsightsResponse>({
+    return this.request<PostsWithInsightsResponse>({
       method: 'GET',
       url: this.buildPath(apiVersion, `${pageId}/posts`),
       params: query,
@@ -175,7 +170,7 @@ export class FacebookClient {
     const token = this.resolveAccessToken(accessToken);
     const apiVersion = this.resolveApiVersion();
 
-    const response = await this.requestWithRetry<ListPagesResponse>({
+    return this.request<ListPagesResponse>({
       method: 'GET',
       url: this.buildPath(apiVersion, 'me/accounts'),
       params: {
@@ -183,8 +178,45 @@ export class FacebookClient {
         fields: 'id,name,access_token,category,tasks',
       },
     });
+  }
 
-    return response;
+  async getPageDetails(pageId?: string): Promise<PageDetails> {
+    const resolvedPageId = pageId || this.config.pageId;
+    if (!resolvedPageId) {
+      throw new FacebookApiError({ code: 'VALIDATION', message: 'page_id is required', raw: null });
+    }
+
+    const apiVersion = this.resolveApiVersion();
+    const accessToken = this.resolveAccessToken();
+
+    return this.request<PageDetails>({
+      method: 'GET',
+      url: this.buildPath(apiVersion, resolvedPageId),
+      params: {
+        access_token: accessToken,
+        fields: 'id,name,about,category,category_list,fan_count,followers_count,link,website,phone,emails,location,single_line_address,cover,picture',
+      },
+    });
+  }
+
+  async getPageFeed(pageId?: string, limit?: number): Promise<PageFeedResponse> {
+    const resolvedPageId = pageId || this.config.pageId;
+    if (!resolvedPageId) {
+      throw new FacebookApiError({ code: 'VALIDATION', message: 'page_id is required', raw: null });
+    }
+
+    const apiVersion = this.resolveApiVersion();
+    const accessToken = this.resolveAccessToken();
+
+    return this.request<PageFeedResponse>({
+      method: 'GET',
+      url: this.buildPath(apiVersion, `${resolvedPageId}/feed`),
+      params: {
+        access_token: accessToken,
+        fields: 'id,message,created_time,permalink_url,full_picture,type,shares,reactions.summary(true),comments.summary(true)',
+        limit: String(limit ?? 25),
+      },
+    });
   }
 
   listKnownMetrics(): KnownMetricsResponse {
@@ -202,7 +234,7 @@ export class FacebookClient {
     const apiVersion = this.resolveApiVersion(params.apiVersion);
 
     try {
-      const response = await this.requestWithRetry<{ id?: string; name?: string } & Record<string, unknown>>({
+      const response = await this.request<{ id?: string; name?: string } & Record<string, unknown>>({
         method: 'GET',
         url: this.buildPath(apiVersion, 'me'),
         params: {
@@ -224,7 +256,6 @@ export class FacebookClient {
           raw: error.normalized.raw,
         };
       }
-
       throw error;
     }
   }
@@ -246,24 +277,11 @@ export class FacebookClient {
     return `/${version}/${cleanedPath}`;
   }
 
-  private async requestWithRetry<T>(config: AxiosRequestConfig, attempt = 0): Promise<T> {
+  private async request<T>(config: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await this.axiosInstance.request<T>(config);
-      return response.data;
+      return await requestWithRetry<T>(this.axiosInstance, config);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-        if ((status && status >= 500 && status < 600) || status === 429) {
-          if (attempt < 2) {
-            const retryAfterHeader = error.response?.headers?.['retry-after'] as string | undefined;
-            const retryAfterSeconds = retryAfterHeader ? Number(retryAfterHeader) : undefined;
-            const backoffBase = Math.pow(2, attempt) * 500;
-            const jitter = Math.floor(Math.random() * 250);
-            const delay = retryAfterSeconds ? retryAfterSeconds * 1000 : backoffBase + jitter;
-            await new Promise<void>((resolve) => setTimeout(resolve, delay));
-            return this.requestWithRetry<T>(config, attempt + 1);
-          }
-        }
         throw this.wrapAxiosError(error as GraphApiError);
       }
       throw new FacebookApiError({ code: 'UNKNOWN', message: (error as Error)?.message || 'Unknown error', raw: error });

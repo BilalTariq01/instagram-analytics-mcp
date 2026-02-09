@@ -1,4 +1,6 @@
-import { AxiosError } from 'axios';
+/**
+ * Type definitions for Facebook Graph API responses
+ */
 
 export interface FacebookConfig {
   accessToken?: string;
@@ -55,13 +57,6 @@ export interface PostWithInsights {
   [key: string]: unknown;
 }
 
-export interface NormalizedError {
-  code: string;
-  subcode?: string;
-  message: string;
-  raw?: unknown;
-}
-
 export interface GraphError {
   message: string;
   type?: string;
@@ -69,6 +64,8 @@ export interface GraphError {
   error_subcode?: number;
   fbtrace_id?: string;
 }
+
+import { AxiosError } from 'axios';
 
 export type GraphApiError = AxiosError<{
   error?: GraphError;
@@ -142,11 +139,35 @@ export interface ListPagesResponse {
   paging?: PagingInfo;
 }
 
-export class FacebookApiError extends Error {
-  normalized: NormalizedError;
+export interface PageDetails {
+  id: string;
+  name: string;
+  about?: string;
+  category?: string;
+  category_list?: Array<{ id: string; name: string }>;
+  fan_count?: number;
+  followers_count?: number;
+  link?: string;
+  website?: string;
+  phone?: string;
+  emails?: string[];
+  location?: Record<string, unknown>;
+  single_line_address?: string;
+  cover?: { source: string };
+  picture?: { data: { url: string } };
+}
 
-  constructor(normalized: NormalizedError) {
-    super(normalized.message);
-    this.normalized = normalized;
-  }
+export interface PageFeedResponse {
+  data: Array<{
+    id: string;
+    message?: string;
+    created_time?: string;
+    permalink_url?: string;
+    full_picture?: string;
+    type?: string;
+    shares?: { count: number };
+    reactions?: { summary: { total_count: number } };
+    comments?: { summary: { total_count: number } };
+  }>;
+  paging?: PagingInfo;
 }

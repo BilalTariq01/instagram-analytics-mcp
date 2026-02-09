@@ -5,6 +5,7 @@
 export interface InstagramConfig {
   accessToken: string;
   accountId?: string;
+  apiVersion?: string;
 }
 
 export interface AccountInsight {
@@ -33,12 +34,23 @@ export interface MediaInsight {
 export interface MediaItem {
   id: string;
   caption?: string;
-  media_type: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM';
+  media_type: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM' | 'REELS';
   media_url?: string;
   permalink?: string;
   timestamp: string;
   like_count?: number;
   comments_count?: number;
+  media_product_type?: string;
+  thumbnail_url?: string;
+}
+
+export interface StoryItem {
+  id: string;
+  caption?: string;
+  media_type: 'IMAGE' | 'VIDEO';
+  media_url?: string;
+  permalink?: string;
+  timestamp: string;
 }
 
 export interface UserProfile {
@@ -69,6 +81,46 @@ export interface MediaResponse {
       after: string;
     };
     next?: string;
+  };
+}
+
+export interface StoryResponse {
+  data: StoryItem[];
+  paging?: {
+    cursors?: {
+      before: string;
+      after: string;
+    };
+    next?: string;
+  };
+}
+
+export interface HashtagSearchResponse {
+  data: Array<{ id: string }>;
+}
+
+export interface HashtagMediaResponse {
+  data: MediaItem[];
+  paging?: {
+    cursors?: {
+      before: string;
+      after: string;
+    };
+    next?: string;
+  };
+}
+
+export interface ContentPublishingLimitResponse {
+  config: {
+    quota_total: number;
+    quota_duration: number;
+  };
+  quota_usage: number;
+}
+
+export interface MentionedMediaResponse {
+  mentioned_media: {
+    data: MediaItem[];
   };
 }
 

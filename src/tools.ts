@@ -53,7 +53,7 @@ export const INSTAGRAM_TOOLS: Tool[] = [
               'profile_links_taps',
               'reach',
               'replies',
-              'saved',
+              'saves',
               'shares',
               'total_interactions',
               'views',

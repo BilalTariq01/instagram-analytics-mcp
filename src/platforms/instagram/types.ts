@@ -137,7 +137,7 @@ export type AccountMetric =
   | 'profile_links_taps'
   | 'reach'
   | 'replies'
-  | 'saved'
+  | 'saves'
   | 'shares'
   | 'total_interactions'
   | 'views';
